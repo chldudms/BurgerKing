@@ -26,7 +26,7 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BurgerKing.rc">
-      <Filter>리소스 파일</Filter>
+      <Filter>소스 파일</Filter>
     </ResourceCompile>
   </ItemGroup>
 </Project>
