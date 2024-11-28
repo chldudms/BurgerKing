@@ -423,8 +423,9 @@ int main() {
                 if (missile.isHitByMissile(it->sprite)) {
                     missile.shape.setPosition(-100, -100);
                     it->hp--;
-                    if (it->hp == 0)
+                    if (it->hp == 0) {   //패티적은 체력이 0일때
                         it = pattyEnemies.erase(it);  enemyCnt--;
+                    }
                 }
                 else {
                     ++it;
