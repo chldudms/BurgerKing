@@ -6,9 +6,9 @@
 using namespace std;
 
 // 화면 크기 정의
-const int WINDOW_WIDTH = 1300;
+const int WINDOW_WIDTH = 1300;  
 const int WINDOW_HEIGHT = 800;
-const int FLOOR_COUNT = 4;
+const int FLOOR_COUNT = 4;   // 층 개수
 const float GRAVITY = 0.5f;
 const float JUMP_FORCE = -15.0f;
 const float DOWN_FORCE = 10.0f;
@@ -25,7 +25,7 @@ public:
     bool isJumping = false;
     bool isDown = false;
     int hp = 3;             // 플레이어 체력
-    float moveSpeed = 8.0f; // 플레이어 이동 속도
+    float moveSpeed = 10.0f; // 플레이어 이동 속도
 
     Player(const std::string& textureFile, float x, float y, float moveSpeed = 5.0f)
         : moveSpeed(moveSpeed) {
@@ -90,13 +90,16 @@ public:
 };
 
 // 각 층에 따른 적 클래스들
+// PattyEnemy 클래스
 class PattyEnemy {
 public:
     sf::Sprite sprite;
     sf::Texture texture;
     float speed;
+    int hp;
 
-    PattyEnemy(const std::string& textureFile, float x, float y, float speed) : speed(speed) {
+    PattyEnemy(const std::string& textureFile, float x, float y, float speed, int hp)
+        : speed(speed), hp(hp) {
         if (!texture.loadFromFile(textureFile)) {
             std::cerr << "Failed to load PattyEnemy texture!" << std::endl;
             exit(-1);
@@ -106,17 +109,13 @@ public:
     }
 
     void move(float leftBound, float rightBound) {
-        sprite.move(speed*5, 0);
+        sprite.move(speed , 0);
 
         // 벽에 부딪히면 방향 변경
-        if (sprite.getPosition().x <= leftBound || sprite.getPosition().x + sprite.getGlobalBounds().width >= rightBound) {
+        if (sprite.getPosition().x <= leftBound ||
+            sprite.getPosition().x + sprite.getGlobalBounds().width >= rightBound) {
             speed *= -1;
         }
-    }
-
-    void attack() {
-       
-      //  sprite.move(speed, 0);
     }
 };
 
@@ -293,7 +292,7 @@ int main() {
     // 3층 상추 적 생성
     lettuceEnemies.emplace_back("img/lettuce.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (3 * FLOOR_SPACING) + FLOOR_OFFSET - 70, 4.0f);
     // 4층 패티 적 생성
-    pattyEnemies.emplace_back("img/patty.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (4 * FLOOR_SPACING) + FLOOR_OFFSET - 70, 5.0f);
+    pattyEnemies.emplace_back("img/patty.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (4 * FLOOR_SPACING) + FLOOR_OFFSET - 70, 5.0f,1);
 
 
     // 미사일 
@@ -423,8 +422,9 @@ int main() {
             for (auto it = pattyEnemies.begin(); it != pattyEnemies.end();) {
                 if (missile.isHitByMissile(it->sprite)) {
                     missile.shape.setPosition(-100, -100);
-                    it = pattyEnemies.erase(it);
-                    enemyCnt--;
+                    it->hp--;
+                    if (it->hp == 0)
+                        it = pattyEnemies.erase(it);  enemyCnt--;
                 }
                 else {
                     ++it;
@@ -447,19 +447,27 @@ int main() {
             // 각 층에 적을 추가
             if (buneEnemies.size() < 1 && enemyCnt > 0) {
                 buneEnemies.emplace_back("img/bune.png", rand() % (WINDOW_WIDTH ), WINDOW_HEIGHT - FLOOR_SPACING + FLOOR_OFFSET - 70, 2.0f);
-                enemyCnt--;
+             
             }
             if (cheeseEnemies.size() < 1 && enemyCnt > 0) {
                 cheeseEnemies.emplace_back("img/cheese.png", rand() % (WINDOW_WIDTH), WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 120, 3.0f);
-                enemyCnt--;
+             
             }
             if (lettuceEnemies.size() < 1 && enemyCnt > 0) {
                 lettuceEnemies.emplace_back("img/lettuce.png", rand() % (WINDOW_WIDTH), WINDOW_HEIGHT - (3 * FLOOR_SPACING) + FLOOR_OFFSET - 70, 4.0f);
-                enemyCnt--;
+          
             }
+            // 반반 확률로 트리플패티 & 일반 패티 생성
             if (pattyEnemies.size() < 1 && enemyCnt > 0) {
-                pattyEnemies.emplace_back("img/patty.png", rand() % (WINDOW_WIDTH), WINDOW_HEIGHT - (4 * FLOOR_SPACING) + FLOOR_OFFSET - 70, 5.0f);
-                enemyCnt--;
+                // 50% 확률로 트리플 패티 또는 일반 패티 생성
+                if (std::rand() % 2 == 0) { // 50% 확률
+                    pattyEnemies.emplace_back("img/patty3.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (4 * FLOOR_SPACING) + FLOOR_OFFSET - 150, 5.0f, 3);// 체력: 3 (트리플 패티)
+                }
+                else {
+                    pattyEnemies.emplace_back( // 일반 패티
+                     "img/patty.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (4 * FLOOR_SPACING) + FLOOR_OFFSET - 70,
+                        5.0f,1 ); // 체력: 1 (일반 패티)
+                }
             }
             // 타이머 리셋
             enemyClock.restart();
