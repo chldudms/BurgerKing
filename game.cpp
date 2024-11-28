@@ -14,6 +14,7 @@ const float JUMP_FORCE = -15.0f;
 const float DOWN_FORCE = 10.0f;
 const float FLOOR_SPACING = 200.0f;  // 층 간 간격을 줄여서 화면에 다 들어오게 조정
 const float FLOOR_THICKNESS = 40.0f;  // 층 두께 설정
+int lastDirection = 1;  // 1: 오른쪽, -1: 왼쪽 (기본값은 오른쪽)   
  int enemyCnt = 50;
 
 class Player {
@@ -24,7 +25,6 @@ public:
     bool isJumping = false;
     bool isDown = false;
     int hp = 3;             // 플레이어 체력
-    int lastDirection = 1;  // 1: 오른쪽, -1: 왼쪽 (기본값은 오른쪽)   
     float moveSpeed = 5.0f; // 플레이어 이동 속도
 
     Player(const std::string& textureFile, float x, float y, float moveSpeed = 5.0f)
@@ -148,8 +148,8 @@ public:
     }
 
     void attack() {
-        // 4층의 패티 적은 일정한 위치에서 점프
-        sprite.move(0, (rand() % 2 == 0) ? -5.0f : 5.0f);  // 간헐적인 점프
+       
+        sprite.move(speed, 0);
     }
 };
 
@@ -178,7 +178,7 @@ public:
     }
 
     void attack() {
-        // 3층의 상추 적은 대각선으로 이동
+     
         sprite.move(speed, 0);
     }
 };
@@ -208,7 +208,7 @@ public:
     }
 
     void attack() {
-        // 1층의 부네 적은 느리게 이동
+  
         sprite.move(speed, 0);
     }
 };
@@ -219,6 +219,7 @@ public:
     float speed;
     int direction; // 미사일의 방향 (-1: 왼쪽, 1: 오른쪽)
 
+    // 생성자: 미사일 방향 초기화
     Missile(float x, float y, float speed, int direction)
         : speed(speed), direction(direction) {
         shape.setRadius(10.0f); // 미사일 크기
@@ -226,18 +227,22 @@ public:
         shape.setPosition(x, y + 60.0f); // y값을 조정하여 발사 위치 설정
     }
 
+    // 미사일 이동
     void move() {
-        shape.move(speed * direction, 0); // 미사일은 방향에 따라 이동
+        shape.move(speed * direction, 0); // 미사일 방향에 따라 이동
     }
 
+    // 화면 밖으로 나갔는지 확인
     bool isOffScreen() {
-        return shape.getPosition().x < 0 || shape.getPosition().x > WINDOW_WIDTH; // 화면 밖으로 나갔는지 확인
+        return shape.getPosition().x < 0 || shape.getPosition().x > WINDOW_WIDTH;
     }
 
+    // 적과 충돌했는지 확인
     bool isHitByMissile(const sf::Sprite& enemySprite) {
         return shape.getGlobalBounds().intersects(enemySprite.getGlobalBounds());
     }
 };
+
 
 
 class Floor {
@@ -282,7 +287,7 @@ int main() {
     vector<LettuceEnemy> lettuceEnemies;
     vector<PattyEnemy> pattyEnemies;
 
-    // 1층 부네 적 생성
+    // 1층 번 적 생성
     buneEnemies.emplace_back("img/bune.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - FLOOR_SPACING + FLOOR_OFFSET - 70, 2.0f);
     // 2층 치즈 적 생성
     cheeseEnemies.emplace_back("img/cheese.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 120, 3.0f);
@@ -297,9 +302,9 @@ int main() {
 
     // 미사일 발사 제한 시간
     sf::Clock missileClock;
-    const float MISSILE_COOLDOWN = 1.0f; // 3초  
+    const float MISSILE_COOLDOWN = 1.0f; //1초 
     
-    // 텍스트 렌더링
+    //남은 적 텍스트로 띄우기
         sf::Font font;
         if (!font.loadFromFile("fonts/MaplestoryBold.ttf")) {
             std::cerr << "Failed to load font!" << std::endl;
@@ -307,9 +312,9 @@ int main() {
         }
         sf::Text enemyCountText;
         enemyCountText.setFont(font);
-        enemyCountText.setCharacterSize(30);
+        enemyCountText.setCharacterSize(100);
         enemyCountText.setFillColor(sf::Color::Red);
-        enemyCountText.setPosition(10, 10);
+        enemyCountText.setPosition(10, 60);
 
     // 게임 루프
     while (window.isOpen()) {
@@ -365,7 +370,7 @@ int main() {
                     player.sprite.getPosition().x + player.sprite.getGlobalBounds().width / 2,
                     player.sprite.getPosition().y,
                     8.0f, // 미사일 속도
-                    player.lastDirection // 플레이어의 마지막 방향 저장
+                    lastDirection // 플레이어의 마지막 방향 저장
                 );
                 missileClock.restart();
             }
@@ -390,6 +395,8 @@ int main() {
                 if (missile.isHitByMissile(it->sprite)) {
                     missile.shape.setPosition(-100, -100); // 미사일 제거
                     it = cheeseEnemies.erase(it);          // 적 제거
+                    enemyCnt--;  // 남은 적 갯수 줄어듬
+
                 }
                 else {
                     ++it;
