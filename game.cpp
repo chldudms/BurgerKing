@@ -310,9 +310,10 @@ int main() {
             std::cerr << "Failed to load font!" << std::endl;
             return -1;
         }
+        //남은 적 텍스트 설정
         sf::Text enemyCountText;
         enemyCountText.setFont(font);
-        enemyCountText.setCharacterSize(100);
+        enemyCountText.setCharacterSize(50);
         enemyCountText.setFillColor(sf::Color::Red);
         enemyCountText.setPosition(10, 60);
 
@@ -390,18 +391,23 @@ int main() {
 
 
         // 적과 미사일 충돌 처리
-        for (auto& missile : missiles) {
-            for (auto it = cheeseEnemies.begin(); it != cheeseEnemies.end();) {
-                if (missile.isHitByMissile(it->sprite)) {
-                    missile.shape.setPosition(-100, -100); // 미사일 제거
-                    it = cheeseEnemies.erase(it);          // 적 제거
-                    enemyCnt--;  // 남은 적 갯수 줄어듬
+              for (auto& missile : missiles) {
+                for (auto it = cheeseEnemies.begin(); it != cheeseEnemies.end();) {
+                    if (missile.isHitByMissile(it->sprite)) {
+                        missile.shape.setPosition(-100, -100); // 미사일 제거
 
+                        // 기존 적을 먼저 제거
+                        it = cheeseEnemies.erase(it);
+                        enemyCnt--;  // 남은 적 갯수 줄어듬
+                         //적이 죽으면 새로 생성
+                    }
+                    else {
+                        ++it;
+                    }
                 }
-                else {
-                    ++it;
-                }
-            }
+                // 나머지 적도 같은 방식으로 수정
+           
+
             for (auto it = lettuceEnemies.begin(); it != lettuceEnemies.end();) {
                 if (missile.isHitByMissile(it->sprite)) {
                     missile.shape.setPosition(-100, -100);
@@ -431,12 +437,8 @@ int main() {
                 else {
                     ++it;
               }
-            }
-        }
-
-        enemyCountText.setString("Remaining Enemies: " + std::to_string(enemyCnt));
-        enemyCountText.setPosition(10, 10);  // 적당히 화면 왼쪽 위에 배치
-
+            }  
+         }
 
         // 각 적 이동
         for (auto& enemy : cheeseEnemies) {
@@ -456,6 +458,11 @@ int main() {
         // 화면 갱신
         window.clear();
         window.draw(backgroundSprite);
+
+        // 남은 적  텍스트 추가
+        enemyCountText.setString("Remaining Enemies: " + std::to_string(enemyCnt));  
+        window.draw(enemyCountText);
+
         for (auto& floor : floors)
             window.draw(floor.shape);
         for (auto& enemy : buneEnemies)
@@ -469,11 +476,10 @@ int main() {
         for (auto& missile : missiles)
             window.draw(missile.shape);
         window.draw(player.sprite);
+      
         window.display();
     }
 
-    // 텍스트 추가
-    window.draw(enemyCountText);
 
     return 0;
 }
