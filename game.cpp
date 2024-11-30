@@ -151,15 +151,29 @@ public:
 
 
 
-class CheeseEnemy {
+class CheeseEnemy {  // 2층 치즈적 
 public:
     sf::Sprite sprite;
     sf::Texture texture;
     float speed;
+    sf::Clock cheeseClock; // 치즈 바닥 생성 타이머
 
-    CheeseEnemy(const std::string& textureFile, float x, float y, float speed) : speed(speed) {
+    struct CheeseFloor {
+        sf::Sprite sprite;
+        sf::Clock lifeClock;
+    };
+
+    std::vector<CheeseFloor> cheeseFloors; // 치즈 바닥 목록
+    sf::Texture cheeseFloorTexture;
+
+    CheeseEnemy(const std::string& textureFile, const std::string& floorTextureFile, float x, float y, float speed)
+        : speed(speed) {
         if (!texture.loadFromFile(textureFile)) {
             std::cerr << "Failed to load CheeseEnemy texture!" << std::endl;
+            exit(-1);
+        }
+        if (!cheeseFloorTexture.loadFromFile(floorTextureFile)) {
+            std::cerr << "Failed to load CheeseFloor texture!" << std::endl;
             exit(-1);
         }
         sprite.setTexture(texture);
@@ -175,11 +189,39 @@ public:
         }
     }
 
-    void attack() {
-        // 2층의 치즈 적은 빠르게 왔다 갔다 하며 공격
-        sprite.move(speed * 10, 0);
+    void spawnCheeseFloor() {
+        if (cheeseClock.getElapsedTime().asSeconds() >= 3) { // 3초마다 치즈 바닥 생성
+            CheeseFloor floor;
+            floor.sprite.setTexture(cheeseFloorTexture);
+            floor.sprite.setPosition(sprite.getPosition().x, sprite.getPosition().y + sprite.getGlobalBounds().height - 50);
+            cheeseFloors.push_back(floor);
+            cheeseClock.restart();
+        }
+    }
+
+    void updateCheeseFloors() {
+        // 치즈 바닥 갱신 (만료된 바닥 제거)
+        cheeseFloors.erase(std::remove_if(cheeseFloors.begin(), cheeseFloors.end(),
+            [](const CheeseFloor& floor) { return floor.lifeClock.getElapsedTime().asSeconds() > 5; }),
+            cheeseFloors.end());
+    }
+
+    void drawCheeseFloors(sf::RenderWindow& window) {
+        for (auto& floor : cheeseFloors) {
+            window.draw(floor.sprite);
+        }
+    }
+
+    bool checkPlayerCollision(const sf::Sprite& player) {
+        for (auto& floor : cheeseFloors) {
+            if (player.getGlobalBounds().intersects(floor.sprite.getGlobalBounds())) {
+                return true; // 충돌 발생
+            }
+        }
+        return false;
     }
 };
+
 
 class BuneEnemy {
 public:
@@ -288,7 +330,7 @@ int main() {
     // 1층 번 적 생성
     buneEnemies.emplace_back("img/bune.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - FLOOR_SPACING + FLOOR_OFFSET - 70, 2.0f);
     // 2층 치즈 적 생성
-    cheeseEnemies.emplace_back("img/cheese.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 120, 3.0f);
+    cheeseEnemies.emplace_back("img/cheese.png", "img/cheesefloor.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 120, 3.0f);
     // 3층 상추 적 생성
     lettuceEnemies.emplace_back("img/lettuce.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (3 * FLOOR_SPACING) + FLOOR_OFFSET - 70, 4.0f);
     // 4층 패티 적 생성
@@ -337,9 +379,9 @@ int main() {
             player.moveDown();
 
 
-   // 중력 적용  // 충돌 확인
-        player.applyGravity();
-        player.checkCollision(floorPositions);
+  
+        player.applyGravity(); // 중력 적용  
+        player.checkCollision(floorPositions);// 충돌 확인
 
         // 적과 플레이어 충돌 처리
         for (auto& enemy : buneEnemies) {
@@ -348,7 +390,7 @@ int main() {
             }
         }
         for (auto& enemy : cheeseEnemies) { 
-            if (player.sprite.getGlobalBounds().intersects(enemy.sprite.getGlobalBounds())) {
+            if (player.sprite.getGlobalBounds().intersects(enemy.sprite.getGlobalBounds()) || enemy.checkPlayerCollision(player.sprite)) {
                 player.takeDamage();
             }
         }
@@ -451,7 +493,7 @@ int main() {
              
             }
             if (cheeseEnemies.size() < 1 && enemyCnt > 0) {
-                cheeseEnemies.emplace_back("img/cheese.png", rand() % (WINDOW_WIDTH), WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 120, 3.0f);
+                cheeseEnemies.emplace_back("img/cheese.png","img/cheesefloor.png", rand() % (WINDOW_WIDTH), WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 120, 3.0f);
              
             }
             if (lettuceEnemies.size() < 1 && enemyCnt > 0) {
@@ -476,7 +518,9 @@ int main() {
 
         // 각 적 이동
         for (auto& enemy : cheeseEnemies) {
-            enemy.move(0, WINDOW_WIDTH);
+            enemy.move(0, WINDOW_WIDTH);      // 이동
+            enemy.spawnCheeseFloor();        // 치즈 바닥 생성
+            enemy.updateCheeseFloors();      // 오래된 치즈 바닥 제거
         }
         for (auto& enemy : pattyEnemies) {
             enemy.move(0, WINDOW_WIDTH);
@@ -503,6 +547,9 @@ int main() {
             window.draw(enemy.sprite);
         for (auto& enemy : cheeseEnemies)
             window.draw(enemy.sprite);
+        // 치즈 바닥 렌더링
+        for (auto& enemy : cheeseEnemies) 
+            enemy.drawCheeseFloors(window);
         for (auto& enemy : lettuceEnemies)
             window.draw(enemy.sprite);
         for (auto& enemy : pattyEnemies)
