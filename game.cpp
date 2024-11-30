@@ -228,8 +228,15 @@ public:
     sf::Sprite sprite;
     sf::Texture texture;
     float speed;
+    float jumpSpeed = -20.f; // 점프 속도
+    float gravity = 2.f; // 중력 (적당한 하강 속도)
+    bool isJumping = false;
+    bool onGround = true; // 바닥에 있는지 여부
+    float groundLevel; // 착지할 층의 Y 좌표
+    sf::Clock jumpClock;
 
-    BuneEnemy(const std::string& textureFile, float x, float y, float speed) : speed(speed) {
+    BuneEnemy(const std::string& textureFile, float x, float y, float speed)
+        : speed(speed), groundLevel(y) {  // y 위치는 착지할 바닥의 Y 좌표
         if (!texture.loadFromFile(textureFile)) {
             std::cerr << "Failed to load BuneEnemy texture!" << std::endl;
             exit(-1);
@@ -239,19 +246,36 @@ public:
     }
 
     void move(float leftBound, float rightBound) {
-        sprite.move(speed, 0);
+        sprite.move(speed, 0); // 적은 왼쪽 또는 오른쪽으로 이동
 
         // 벽에 부딪히면 방향 변경
         if (sprite.getPosition().x <= leftBound || sprite.getPosition().x + sprite.getGlobalBounds().width >= rightBound) {
-            speed *= -1;
+            speed = -speed;
         }
     }
 
-    void attack() {
-  
-        sprite.move(speed, 0);
+    void jump() {
+        if (isJumping) {
+            // 점프 중
+            sprite.move(0, jumpSpeed);
+            jumpSpeed += gravity; // 중력 적용
+
+            // 착지
+            if (sprite.getPosition().y >= groundLevel) {
+                sprite.setPosition(sprite.getPosition().x, groundLevel); // 층에 착지
+                isJumping = false; // 점프 완료
+                jumpSpeed = -20.f; // 점프 속도 초기화
+            }
+        }
+        else if (!isJumping && jumpClock.getElapsedTime().asSeconds() >= 3.f) {
+            // 3초마다 점프
+            isJumping = true;
+            jumpClock.restart();
+        }
     }
 };
+
+
 
 class Missile {
 public:
@@ -530,6 +554,7 @@ int main() {
         }
         for (auto& enemy : buneEnemies) {
             enemy.move(0, WINDOW_WIDTH);
+            enemy.jump();
             // 각 적 이동
         }
 
