@@ -123,29 +123,95 @@ class LettuceEnemy {
 public:
     sf::Sprite sprite;
     sf::Texture texture;
+    sf::Texture leafTexture; // 양상추 잎 텍스처
     float speed;
+    sf::Clock splitClock; // 5초마다 분리되는 타이머
+    bool isSplit = false; // 양상추가 분리되었는지 여부
 
-    LettuceEnemy(const std::string& textureFile, float x, float y, float speed) : speed(speed) {
+    struct LettuceLeaf {
+        sf::Sprite sprite;
+        float speed;
+    };
+
+    std::vector<LettuceLeaf> lettuceLeaves; // 분리된 양상추 잎들
+      //양배추 본체
+    LettuceEnemy(const std::string& textureFile, const std::string& leafTextureFile, float x, float y, float speed) : speed(speed) {
         if (!texture.loadFromFile(textureFile)) {
             std::cerr << "Failed to load LettuceEnemy texture!" << std::endl;
             exit(-1);
         }
+        if (!leafTexture.loadFromFile(leafTextureFile)) {
+            std::cerr << "Failed to load LettuceLeaf texture!" << std::endl;
+            exit(-1);
+        }
         sprite.setTexture(texture);
-        sprite.setPosition(x, y);
+        sprite.setPosition(x, y-50);  //y값 위로 (양상추잎들과 사진 사이즈가 달라서)
     }
 
     void move(float leftBound, float rightBound) {
-        sprite.move(speed, 0);
+        if (!isSplit) {
+            sprite.move(speed, 0);
 
-        // 벽에 부딪히면 방향 변경
-        if (sprite.getPosition().x <= leftBound || sprite.getPosition().x + sprite.getGlobalBounds().width >= rightBound) {
-            speed *= -1;
+            // 벽에 부딪히면 방향 변경
+            if (sprite.getPosition().x <= leftBound || sprite.getPosition().x + sprite.getGlobalBounds().width >= rightBound) {
+                speed *= -1;   
+            }
+        }
+        else {
+            // 각 양상추 잎들 독립적으로 이동
+            for (auto& leaf : lettuceLeaves) {
+                leaf.sprite.move(leaf.speed, 0);
+
+                // 벽에 부딪히면 방향 변경
+                if (leaf.sprite.getPosition().x <= leftBound || leaf.sprite.getPosition().x + leaf.sprite.getGlobalBounds().width >= rightBound) {
+                    leaf.speed *= -1;
+                }
+            }
         }
     }
 
     void attack() {
-     
-        sprite.move(speed, 0);
+        if (splitClock.getElapsedTime().asSeconds() >=7) {
+            if (!isSplit) {
+                // 7초마다 양상추를 분리
+                splitLettuce();
+            }
+            else {
+                // 일정시간이 지나면 다시 원래 상태로 돌아옴
+                combineLettuce();
+            }
+            splitClock.restart();
+        }
+    }
+
+    void splitLettuce() {  //분리된 양배추
+        isSplit = true;
+        lettuceLeaves.clear(); // 이전 잎들을 지우고
+
+        // 3개의 양상추 잎으로 분리
+        for (int i = 0; i < 3; ++i) {
+            LettuceLeaf leaf;
+            leaf.sprite.setTexture(leafTexture);  // 양상추 잎 텍스처 사용
+            leaf.sprite.setPosition(sprite.getPosition().x + i * 40, sprite.getPosition().y+50); // 잎 위치 분리
+            leaf.speed = (i % 2 == 0) ? speed : -speed; // 각 잎은 반대 방향으로 움직이게 설정
+            lettuceLeaves.push_back(leaf);
+        }
+    }
+
+    void combineLettuce() {
+        isSplit = false;
+        lettuceLeaves.clear(); // 잎들을 합침
+    }
+
+    void draw(sf::RenderWindow& window) {
+        if (!isSplit) {
+            window.draw(sprite); // 분리되지 않았으면 원래 양상추 그리기
+        }
+        else {
+            for (auto& leaf : lettuceLeaves) {
+                window.draw(leaf.sprite); // 분리되었으면 각 잎들 그리기
+            }
+        }
     }
 };
 
@@ -356,7 +422,7 @@ int main() {
     // 2층 치즈 적 생성
     cheeseEnemies.emplace_back("img/cheese.png", "img/cheesefloor.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 120, 3.0f);
     // 3층 상추 적 생성
-    lettuceEnemies.emplace_back("img/lettuce.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (3 * FLOOR_SPACING) + FLOOR_OFFSET - 70, 4.0f);
+    lettuceEnemies.emplace_back("img/lettuce.png", "img/lettuces.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (3 * FLOOR_SPACING) + FLOOR_OFFSET - 70, 4.0f);
     // 4층 패티 적 생성
     pattyEnemies.emplace_back("img/patty.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (4 * FLOOR_SPACING) + FLOOR_OFFSET - 70, 5.0f,1);
 
@@ -521,7 +587,7 @@ int main() {
              
             }
             if (lettuceEnemies.size() < 1 && enemyCnt > 0) {
-                lettuceEnemies.emplace_back("img/lettuce.png", rand() % (WINDOW_WIDTH), WINDOW_HEIGHT - (3 * FLOOR_SPACING) + FLOOR_OFFSET - 70, 4.0f);
+                lettuceEnemies.emplace_back("img/lettuce.png","img/lettuces.png", rand() % (WINDOW_WIDTH), WINDOW_HEIGHT - (3 * FLOOR_SPACING) + FLOOR_OFFSET - 70, 4.0f);
           
             }
             // 반반 확률로 트리플패티 & 일반 패티 생성
@@ -551,6 +617,8 @@ int main() {
         }
         for (auto& enemy : lettuceEnemies) {
             enemy.move(0, WINDOW_WIDTH);
+            // 공격 처리 (5초마다 분리, 합치기)
+            enemy.attack();
         }
         for (auto& enemy : buneEnemies) {
             enemy.move(0, WINDOW_WIDTH);
@@ -576,7 +644,7 @@ int main() {
         for (auto& enemy : cheeseEnemies) 
             enemy.drawCheeseFloors(window);
         for (auto& enemy : lettuceEnemies)
-            window.draw(enemy.sprite);
+            enemy.draw(window);
         for (auto& enemy : pattyEnemies)
             window.draw(enemy.sprite);
         for (auto& missile : missiles)
