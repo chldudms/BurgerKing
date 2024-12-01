@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <random>
+#include "Boss.cpp"
 
 using namespace std;
 
@@ -15,7 +16,7 @@ const float DOWN_FORCE = 10.0f;
 const float FLOOR_SPACING = 200.0f;  // 층 간 간격을 줄여서 화면에 다 들어오게 조정
 const float FLOOR_THICKNESS = 40.0f;  // 층 두께 설정
 int lastDirection = 1;  // 1: 오른쪽, -1: 왼쪽 (기본값은 오른쪽)   
-int enemyCnt = 50;
+int enemyCnt = 0;
 
 class Player {
 public:
@@ -35,7 +36,7 @@ public:
         }
         sprite.setTexture(texture);
         sprite.setPosition(x, y);
-    }
+    }   
 
     void jump() {
         if (!isJumping) {
@@ -391,9 +392,10 @@ int main() {
     window.setFramerateLimit(60);
 
     // 배경 텍스처 및 스프라이트
-    sf::Texture backgroundTexture;
-    if (!backgroundTexture.loadFromFile("img/back.jpg")) {
-        std::cerr << "Failed to load background texture!" << std::endl;
+    sf::Texture backgroundTexture, backgroundTexture2;
+    if (!backgroundTexture.loadFromFile("img/back.jpg") ||
+        !backgroundTexture2.loadFromFile("img/back2.jpg")) {
+        std::cerr << "Failed to load background textures!" << std::endl;
         return -1;
     }
     sf::Sprite backgroundSprite(backgroundTexture);
@@ -639,7 +641,23 @@ int main() {
             // 각 적 이동
         }
 
-  // 남은 적이 0이면 
+        // 보스 생성 (main 함수 시작부)
+        Boss boss("img/boss.png", "img/bacon.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 150 ,2.0f);
+
+      
+        if (enemyCnt == 0) {
+            // 적 제거 및 배경 변경
+            buneEnemies.clear();
+            cheeseEnemies.clear();
+            lettuceEnemies.clear();
+            pattyEnemies.clear();
+            backgroundSprite.setTexture(backgroundTexture2);  // 배경을 back2로 변경
+        
+            boss.move(0, WINDOW_WIDTH);
+            boss.baconShot();
+           
+        }
+
 
 
         // 화면 갱신
@@ -666,6 +684,9 @@ int main() {
         for (auto& missile : missiles)
             window.draw(missile.shape);
         window.draw(player.sprite);
+        if (enemyCnt == 0) {
+            window.draw(boss.sprite); // 보스가 화면에 등장
+        }
 
         window.display();
     }

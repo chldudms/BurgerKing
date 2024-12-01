@@ -18,9 +18,6 @@
     <ClInclude Include="resource.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="GameState.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BurgerKing.rc">
@@ -29,6 +26,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="game.cpp">
+      <Filter>헤더 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="BossStage.cpp">
+      <Filter>헤더 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Boss.cpp">
       <Filter>헤더 파일</Filter>
     </ClCompile>
   </ItemGroup>
