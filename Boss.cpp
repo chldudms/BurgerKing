@@ -33,19 +33,25 @@ public:
     }
 
     void baconShot() {
-        if (baconClock.getElapsedTime().asSeconds() >= 5.0f) {
+        if (baconClock.getElapsedTime().asSeconds() >= 3.0f) {
             sf::Vector2f pos = sprite.getPosition();
             sf::Vector2f center = { pos.x + sprite.getGlobalBounds().width / 2,
                                    pos.y + sprite.getGlobalBounds().height / 2 };
 
             // 6방향으로 발사
             std::vector<sf::Vector2f> directions = {
-                {0, -1}, {1, 0}, {0, 1}, {-1, 0}, {0.7f, -0.7f}, {-0.7f, -0.7f}
+                {0, -100},   // 위
+                {1, 0},    // 오른쪽
+                {0, 1},    // 아래
+                {-1, 0},   // 왼쪽
+                {0.7f, -0.7f},  // 오른쪽 위
+                {-0.7f, -0.7f}  // 왼쪽 위
             };
+
             for (const auto& dir : directions) {
                 BaconShot shot;
                 shot.sprite.setTexture(baconShotTexture);
-                shot.sprite.setPosition(center);
+                shot.sprite.setPosition(center); // 발사 위치를 중앙으로 설정
                 shot.direction = dir;
                 baconShots.push_back(shot);
             }

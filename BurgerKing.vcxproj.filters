@@ -28,10 +28,10 @@
     <ClCompile Include="game.cpp">
       <Filter>헤더 파일</Filter>
     </ClCompile>
-    <ClCompile Include="BossStage.cpp">
+    <ClCompile Include="Boss.cpp">
       <Filter>헤더 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Boss.cpp">
+    <ClCompile Include="Enemy.cpp">
       <Filter>헤더 파일</Filter>
     </ClCompile>
   </ItemGroup>
