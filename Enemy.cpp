@@ -49,12 +49,12 @@ public:
 
     std::vector<LettuceLeaf> lettuceLeaves; // ºÐ¸®µÈ ¾ç»óÃß ÀÙµé
     //¾ç¹èÃß º»Ã¼
-    LettuceEnemy(const std::string& textureFile, const std::string& leafTextureFile, float x, float y, float speed) : speed(speed) {
-        if (!texture.loadFromFile(textureFile)) {
+    LettuceEnemy(float x, float y, float speed) : speed(speed) {
+        if (!texture.loadFromFile("img/lettuce.png")) {
             std::cerr << "Failed to load LettuceEnemy texture!" << std::endl;
             exit(-1);
         }
-        if (!leafTexture.loadFromFile(leafTextureFile)) {
+        if (!leafTexture.loadFromFile("img/lettuces.png")) {
             std::cerr << "Failed to load LettuceLeaf texture!" << std::endl;
             exit(-1);
         }
@@ -146,13 +146,13 @@ public:
     std::vector<CheeseFloor> cheeseFloors; // Ä¡Áî ¹Ù´Ú ¸ñ·Ï
     sf::Texture cheeseFloorTexture;
 
-    CheeseEnemy(const std::string& textureFile, const std::string& floorTextureFile, float x, float y, float speed)
+    CheeseEnemy(float x, float y, float speed)
         : speed(speed) {
-        if (!texture.loadFromFile(textureFile)) {
+        if (!texture.loadFromFile("img/cheese.png")) {
             std::cerr << "Failed to load CheeseEnemy texture!" << std::endl;
             exit(-1);
         }
-        if (!cheeseFloorTexture.loadFromFile(floorTextureFile)) {
+        if (!cheeseFloorTexture.loadFromFile("img/cheesefloor.png")) {
             std::cerr << "Failed to load CheeseFloor texture!" << std::endl;
             exit(-1);
         }
@@ -215,9 +215,9 @@ public:
     float groundLevel; // ÂøÁöÇÒ ÃþÀÇ Y ÁÂÇ¥
     sf::Clock jumpClock;
 
-    BuneEnemy(const std::string& textureFile, float x, float y, float speed)
+    BuneEnemy( float x, float y, float speed)
         : speed(speed), groundLevel(y) {  // y À§Ä¡´Â ÂøÁöÇÒ ¹Ù´ÚÀÇ Y ÁÂÇ¥
-        if (!texture.loadFromFile(textureFile)) {
+        if (!texture.loadFromFile("img/bune.png")) {
             std::cerr << "Failed to load BuneEnemy texture!" << std::endl;
             exit(-1);
         }

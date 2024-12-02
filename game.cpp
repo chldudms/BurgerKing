@@ -17,7 +17,6 @@ const float DOWN_FORCE = 10.0f;
 const float FLOOR_SPACING = 200.0f;  // 층 간 간격을 줄여서 화면에 다 들어오게 조정
 const float FLOOR_THICKNESS = 40.0f;  // 층 두께 설정
 int lastDirection = 1;  // 1: 오른쪽, -1: 왼쪽 (기본값은 오른쪽)   
-int enemyCnt = 1;
 
 class Player {
 public:
@@ -26,7 +25,6 @@ public:
     float velocityY = 0.0f;
     bool isJumping = false;
     bool isDown = false;
-    int hp = 3;             // 플레이어 체력
     float moveSpeed = 10.0f; // 플레이어 이동 속도
 
     Player(const std::string& textureFile, float x, float y, float moveSpeed = 5.0f)
@@ -82,15 +80,7 @@ public:
         }
     }
 
-    void takeDamage() {
-        hp--;
-        if (hp <= 0) {
-            std::cout << "Game Over!" << std::endl;
-            exit(0);  // 게임 오버 처리
-        }
-    }
 };
-
 
 class Missile {
 public:
@@ -103,7 +93,7 @@ public:
         : speed(speed), direction(direction) {
         shape.setRadius(10.0f); // 미사일 크기
         shape.setFillColor(sf::Color::Red);
-        shape.setPosition(x, y +50.0f); // y값을 조정하여 발사 위치 설정
+        shape.setPosition(x, y +70.0f); // y값을 조정하여 발사 위치 설정
     }
 
     // 미사일 이동
@@ -137,16 +127,21 @@ int main() {
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "BurgerKing");
     window.setFramerateLimit(60);
 
-    // 배경 텍스처 및 스프라이트
-    sf::Texture backgroundTexture, backgroundTexture2, gameOverTexture, gameClearTexture;
-    if (!backgroundTexture.loadFromFile("img/back.jpg") || !backgroundTexture2.loadFromFile("img/back2.jpg")|| !gameClearTexture.loadFromFile("img/clear.jpg")) {
+    // 배경 텍스처
+    sf::Texture backgroundTexture, backgroundTexture2, gameOverTexture, gameClearTexture,gameStartTexture;
+    if (!backgroundTexture.loadFromFile("img/back.jpg") || !backgroundTexture2.loadFromFile("img/back2.jpg")) {
+        std::cerr << "Failed to load background textures!" << std::endl;
+        return -1;
+    }
+    //시작 & 엔딩
+    if (!gameStartTexture.loadFromFile("img/start.jpg") || !gameOverTexture.loadFromFile("img/gameover.jpg")|| !gameClearTexture.loadFromFile("img/clear.jpg")) {
         std::cerr << "Failed to load background textures!" << std::endl;
         return -1;
     }
     sf::Sprite backgroundSprite(backgroundTexture);
 
     // 플레이어 생성
-    Player player("img/burger0.png", WINDOW_WIDTH / 2, WINDOW_HEIGHT - FLOOR_SPACING - 70);
+    Player player("img/burger1.png", WINDOW_WIDTH / 2, WINDOW_HEIGHT - FLOOR_SPACING - 70);
 
     // 층 생성
     vector<Floor> floors;
@@ -165,25 +160,24 @@ int main() {
     vector<PattyEnemy> pattyEnemies;
    
 
-
     // 1층 번 적 생성
-    buneEnemies.emplace_back("img/bune.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - FLOOR_SPACING + FLOOR_OFFSET - 70, 2.0f);
+    buneEnemies.emplace_back( rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - FLOOR_SPACING + FLOOR_OFFSET - 70, 2.0f);
     // 2층 치즈 적 생성
-    cheeseEnemies.emplace_back("img/cheese.png", "img/cheesefloor.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 120, 3.0f);
+    cheeseEnemies.emplace_back( rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 120, 3.0f);
     // 3층 상추 적 생성
-    lettuceEnemies.emplace_back("img/lettuce.png", "img/lettuces.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (3 * FLOOR_SPACING) + FLOOR_OFFSET - 70, 4.0f);
+    lettuceEnemies.emplace_back( rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (3 * FLOOR_SPACING) + FLOOR_OFFSET - 70, 4.0f);
     // 4층 패티 적 생성
     pattyEnemies.emplace_back("img/patty.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (4 * FLOOR_SPACING) + FLOOR_OFFSET - 70, 5.0f, 1);
 
     // 버거킹 보스 생성 
-    Boss boss("img/kingboss.png","img/bacon.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 150, 10.0f);
+    Boss boss("img/kingboss.png","img/bacon.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 150, 9.0f);
 
     // 좀비보스 
     Boss zom1("img/zombie.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 180, 5.0f);
     // 좀비보스 
-    Boss zom2("img/zombie.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (3 * FLOOR_SPACING) + FLOOR_OFFSET - 180, 5.0f);
+    Boss zom2("img/zombie.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (3 * FLOOR_SPACING) + FLOOR_OFFSET - 180, 6.0f);
     // 좀비보스 
-    Boss zom3("img/zombie.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (4 * FLOOR_SPACING) + FLOOR_OFFSET - 180, 5.0f);
+    Boss zom3("img/zombie.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (4 * FLOOR_SPACING) + FLOOR_OFFSET - 180, 8.0f);
 
 
     // 미사일 
@@ -210,8 +204,13 @@ int main() {
     sf::Clock enemyClock; // 적을 5초마다 생성할 타이머
 
     bool isCleared = false;  // 게임 클리어 상태 변수
+    bool isOver = false;
+    int enemyCnt = 1;
+
     // 게임 루프
     while (window.isOpen()) {
+
+
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
@@ -235,32 +234,37 @@ int main() {
         // 적과 플레이어 충돌 처리
         for (auto& enemy : buneEnemies) {
             if (player.sprite.getGlobalBounds().intersects(enemy.sprite.getGlobalBounds())) {
-                player.takeDamage();
+                isOver = true;
+               
             }
         }
         for (auto& enemy : cheeseEnemies) {
             if (player.sprite.getGlobalBounds().intersects(enemy.sprite.getGlobalBounds()) || enemy.checkPlayerCollision(player.sprite)) {
-                player.takeDamage();
+                isOver = true;
+               
             }
         }
         for (auto& enemy : lettuceEnemies) {
             // 본체와 충돌 확인
             if (player.sprite.getGlobalBounds().intersects(enemy.sprite.getGlobalBounds())) {
-                player.takeDamage();
+                isOver = true;
+                
             }
       // 분리된 잎들과 충돌 확인
             for (auto& leaf : enemy.lettuceLeaves) {
                 if (player.sprite.getGlobalBounds().intersects(leaf.sprite.getGlobalBounds())) {
-                    player.takeDamage();
+                    isOver = true;
                     break; // 충돌이 발생하면 잎의 나머지 충돌 확인 생략
                 }
             }
         }
         for (auto& enemy : pattyEnemies) {
             if (player.sprite.getGlobalBounds().intersects(enemy.sprite.getGlobalBounds())) {
-                player.takeDamage();
+                isOver = true;
             }
         }
+ 
+   
 
         //스페이스 눌렀을때 미사일 발사 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
@@ -342,15 +346,15 @@ int main() {
         if (enemyClock.getElapsedTime().asSeconds() >= 3.0f && enemyCnt > 0) {
             // 각 층에 적을 추가
             if (buneEnemies.size() < 1 && enemyCnt > 0) {
-                buneEnemies.emplace_back("img/bune.png", rand() % (WINDOW_WIDTH), WINDOW_HEIGHT - FLOOR_SPACING + FLOOR_OFFSET - 70, 2.0f);
+                buneEnemies.emplace_back( rand() % (WINDOW_WIDTH), WINDOW_HEIGHT - FLOOR_SPACING + FLOOR_OFFSET - 70, 2.0f);
 
             }
             if (cheeseEnemies.size() < 1 && enemyCnt > 0) {
-                cheeseEnemies.emplace_back("img/cheese.png", "img/cheesefloor.png", rand() % (WINDOW_WIDTH), WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 120, 3.0f);
+                cheeseEnemies.emplace_back( rand() % (WINDOW_WIDTH), WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 120, 3.0f);
 
             }
             if (lettuceEnemies.size() < 1 && enemyCnt > 0) {
-                lettuceEnemies.emplace_back("img/lettuce.png", "img/lettuces.png", rand() % (WINDOW_WIDTH), WINDOW_HEIGHT - (3 * FLOOR_SPACING) + FLOOR_OFFSET - 70, 4.0f);
+                lettuceEnemies.emplace_back( rand() % (WINDOW_WIDTH), WINDOW_HEIGHT - (3 * FLOOR_SPACING) + FLOOR_OFFSET - 70, 4.0f);
 
             }
             // 반반 확률로 트리플패티 & 일반 패티 생성
@@ -389,7 +393,6 @@ int main() {
             // 각 적 이동
         }
 
-
         // 화면 갱신
         window.clear();
         window.draw(backgroundSprite);
@@ -424,7 +427,7 @@ int main() {
         }
         window.draw(player.sprite);
 
-        // 보스와 좀비 렌더링
+ //보스 스테이지 - 남은 적이 0일때
         if (enemyCnt == 0) {
             buneEnemies.clear();
             cheeseEnemies.clear();
@@ -455,23 +458,59 @@ int main() {
                 }
             }
 
+            // 보스와 플레이어 충돌 처리
+            if (player.sprite.getGlobalBounds().intersects(boss.sprite.getGlobalBounds())) {
+                    isOver = true; // 플레이어 체력이 0이면 게임 오버
+               
+            }
+            // 좀비와 플레이어 충돌 처리
+            if (player.sprite.getGlobalBounds().intersects(zom1.sprite.getGlobalBounds()) ||
+                player.sprite.getGlobalBounds().intersects(zom2.sprite.getGlobalBounds()) ||
+                player.sprite.getGlobalBounds().intersects(zom3.sprite.getGlobalBounds())) {
+                isOver = true; // 플레이어가 좀비와 충돌하면 게임 오버
+            }
+
+            // 보스의 베이컨 공격과 플레이어 충돌 처리
+            for (auto& bacon : boss.baconShots) { // 보스의 모든 베이컨에 대해
+                if (player.sprite.getGlobalBounds().intersects(bacon.sprite.getGlobalBounds())) {
+                    isOver = true; // 베이컨과 충돌하면 게임 오버
+                }
+            }
+
+            // 보스 체력이 0이면 게임 클리어
             if (boss.hp == 0) {
                 isCleared = true;
             }
 
-            if (!isCleared) {
-                // 보스 이동 및 공격
-                boss.move(0, WINDOW_WIDTH);
-                boss.baconShot();
-                boss.draw(window);  // 보스 그리기
-            }
-            // 게임 클리어 상태
+            // 게임 클리어 상태일 때
             if (isCleared) {
                 backgroundSprite.setTexture(gameClearTexture);
                 window.draw(backgroundSprite);
             }
+
+            // 보스 이동 및 공격
+            if (!isCleared && !isOver) {
+                boss.move(0, WINDOW_WIDTH);
+                boss.baconShot();
+                boss.draw(window);  // 보스 그리기
+            }
         }
 
+      
+      // 게임 클리어 상태
+         if (isCleared) {
+                    backgroundSprite.setTexture(gameClearTexture);
+                    window.draw(backgroundSprite);
+             }
+
+       // 게임 오버 상태일 때
+           if (isOver) {
+                    window.clear(); // 이전 화면 지우기
+                    backgroundSprite.setTexture(gameOverTexture); // 게임 오버 배경 설정
+                    window.draw(backgroundSprite); // 게임 오버 배경 렌더링
+                    window.display(); // 화면 업데이트
+                    continue; // 나머지 게임 로직 실행 방지
+             }
         window.display();
     }
 

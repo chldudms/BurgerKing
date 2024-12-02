@@ -22,7 +22,7 @@ public:
 
     // 킹보스 생성자: 체력 10
     Boss(const std::string& bossImg, const std::string& baconImg, float x, float y, float speed)
-        : hp(3), speed(speed) {
+        : hp(10), speed(speed) {
         texture.loadFromFile(bossImg);
         baconShotTexture.loadFromFile(baconImg);
         sprite.setTexture(texture);
@@ -97,6 +97,10 @@ public:
         if (hp > 0) {
             hp--; // 체력을 1 감소
         }
+    }
+
+    bool isDead() const {
+        return hp <= 0;  // 보스가 죽었으면 true 반환
     }
 
 };
