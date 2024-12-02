@@ -22,7 +22,7 @@ public:
 
     // 킹보스 생성자: 체력 10
     Boss(const std::string& bossImg, const std::string& baconImg, float x, float y, float speed)
-        : hp(10), speed(speed) {
+        : hp(1), speed(speed) {
         texture.loadFromFile(bossImg);
         baconShotTexture.loadFromFile(baconImg);
         sprite.setTexture(texture);
