@@ -195,6 +195,7 @@ int main() {
         std::cerr << "Failed to load font!" << std::endl;
         return -1;
     }
+
     //남은 적 텍스트 설정
     sf::Text enemyCountText;
     enemyCountText.setFont(font);
@@ -214,13 +215,48 @@ int main() {
     bool isBossStageInitialized = false; // 보스 스테이지 초기화 상태
     bool isEntitiesVisible = false; // 보스와 좀비가 나타날지 여부
 
+
+    sf::Text startText;
+    startText.setFont(font);
+    startText.setString("START");
+    startText.setCharacterSize(50);
+    startText.setFillColor(sf::Color::White);
+    startText.setPosition(WINDOW_WIDTH / 2 - 70, WINDOW_HEIGHT / 2 - 50);
+
+    sf::RectangleShape startButton(sf::Vector2f(200, 100));
+    startButton.setFillColor(sf::Color::Blue);
+    startButton.setPosition(WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2 - 60);
+
+    bool gameStarted = false; // 게임 시작 여부 확인
+
+ 
     // 게임 루프
     while (window.isOpen()) {
-
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
                 window.close();
+        }
+
+        window.clear();
+
+        if (!gameStarted) {
+            // 시작 화면 처리
+            window.clear();
+            backgroundSprite.setTexture(gameStartTexture); // 배경 변경
+            window.draw(backgroundSprite); // 배경 그리기 // 배경 이미지 그리기
+            window.draw(startButton);
+            window.draw(startText);
+            window.display();
+
+
+            if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+                sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+                if (startButton.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePos))) {
+                    gameStarted = true;
+                }
+            }
+            continue; // 게임 로직 건너뜀
         }
 
         // 플레이어 이동
@@ -401,11 +437,12 @@ int main() {
 
         // 화면 갱신
         window.clear();
+        backgroundSprite.setTexture(backgroundTexture); // 배경 변경
         window.draw(backgroundSprite);
 
         // 남은 적  텍스트 추가
         enemyCountText.setString("Remaining Enemies: " + std::to_string(enemyCnt));
-        window.draw(enemyCountText);
+        window.draw(enemyCountText); 
 
         for (auto& floor : floors) {
             window.draw(floor.shape);
@@ -426,14 +463,12 @@ int main() {
         for (auto& enemy : pattyEnemies) {
             window.draw(enemy.sprite);
         }
-
-
         for (auto& missile : missiles) {
             window.draw(missile.shape);
         }
         window.draw(player.sprite);
 
-        // 메인 게임 루프 안에서
+    // 남은 적이 0 이면
         if (enemyCnt == 0) {
             if (!isBossStageInitialized) {
                 // 보스 스테이지 초기화 (첫 진입 시)
@@ -442,11 +477,17 @@ int main() {
                 lettuceEnemies.clear();
                 pattyEnemies.clear();
 
+             
                 backgroundSprite.setTexture(backgroundTexture2); // 배경 변경
-                window.draw(backgroundSprite); // 배경 그리기
                 bossclock.restart(); // 타이머 시작
                 isBossStageInitialized = true;
+
             }
+
+            // 보스 스테이지 화면 갱신
+         
+       
+
 
             // 1초 후 보스 등장
             if (bossclock.getElapsedTime().asSeconds() >= 1.0f) {
