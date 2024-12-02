@@ -1,5 +1,8 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
+#include <iostream>
+
+using namespace std;
 
 class Boss {
 public:
@@ -8,6 +11,7 @@ public:
     sf::Texture baconShotTexture;
     float speed;
     sf::Clock baconClock; // 베이컨슛 타이머
+    int hp; // 보스 체력
 
     struct BaconShot {
         sf::Sprite sprite;
@@ -15,16 +19,23 @@ public:
     };
 
     std::vector<BaconShot> baconShots;
-
-    Boss(const std::string& bossImg, const std::string& baconImg, float x, float y, float speed) {
+      //킹보스  체력 10  
+    Boss(const std::string& bossImg, const std::string& baconImg, float x, float y, float speed) : hp(10) {
         texture.loadFromFile(bossImg);
         baconShotTexture.loadFromFile(baconImg);
         sprite.setTexture(texture);
         sprite.setPosition(x, y);
         this->speed = speed;
     }
+      //좀비보스 체력 100
+    Boss(const std::string& bossImg,float x, float y, float speed) : hp(100) {
+        texture.loadFromFile(bossImg);
+        sprite.setTexture(texture);
+        sprite.setPosition(x, y);
+        this->speed = speed;
+    }
 
-    void move(float leftBound, float rightBound) {
+    void move(float leftBound, float rightBound){
         sprite.move(speed, 0);
         if (sprite.getPosition().x <= leftBound ||
             sprite.getPosition().x + sprite.getGlobalBounds().width >= rightBound) {
@@ -78,4 +89,17 @@ public:
             window.draw(shot.sprite);
         }
     }
+
+    // 보스가 피해를 입을 때
+    void takeDamage(int damage) {
+        hp -= damage;
+        if (hp <= 0) {
+            hp = 0;  // 체력이 0이 되면 보스 사망 처리
+        }
+    }
+
+    bool isDead() {
+        return hp <= 0;  // 보스가 죽었으면 true 반환
+    }
 };
+

@@ -2,6 +2,8 @@
 #include <vector>
 #include <iostream>
 
+using namespace std;
+
 // 각 적들의 클래스 
 class PattyEnemy {
 public:

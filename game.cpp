@@ -17,7 +17,7 @@ const float DOWN_FORCE = 10.0f;
 const float FLOOR_SPACING = 200.0f;  // 층 간 간격을 줄여서 화면에 다 들어오게 조정
 const float FLOOR_THICKNESS = 40.0f;  // 층 두께 설정
 int lastDirection = 1;  // 1: 오른쪽, -1: 왼쪽 (기본값은 오른쪽)   
-int enemyCnt = 10;
+int enemyCnt = 0;
 
 class Player {
 public:
@@ -92,8 +92,6 @@ public:
 };
 
 
-
-
 class Missile {
 public:
     sf::CircleShape shape;
@@ -105,7 +103,7 @@ public:
         : speed(speed), direction(direction) {
         shape.setRadius(10.0f); // 미사일 크기
         shape.setFillColor(sf::Color::Red);
-        shape.setPosition(x, y + 70.0f); // y값을 조정하여 발사 위치 설정
+        shape.setPosition(x, y +50.0f); // y값을 조정하여 발사 위치 설정
     }
 
     // 미사일 이동
@@ -124,8 +122,6 @@ public:
     }
 };
 
-
-
 class Floor {
 public:
     sf::RectangleShape shape;
@@ -142,9 +138,8 @@ int main() {
     window.setFramerateLimit(60);
 
     // 배경 텍스처 및 스프라이트
-    sf::Texture backgroundTexture, backgroundTexture2;
-    if (!backgroundTexture.loadFromFile("img/back.jpg") ||
-        !backgroundTexture2.loadFromFile("img/back2.jpg")) {
+    sf::Texture backgroundTexture, backgroundTexture2, gameOverTexture, gameClearTexture;
+    if (!backgroundTexture.loadFromFile("img/back.jpg") || !backgroundTexture2.loadFromFile("img/back2.jpg")) {
         std::cerr << "Failed to load background textures!" << std::endl;
         return -1;
     }
@@ -168,6 +163,8 @@ int main() {
     vector<CheeseEnemy> cheeseEnemies;
     vector<LettuceEnemy> lettuceEnemies;
     vector<PattyEnemy> pattyEnemies;
+   
+
 
     // 1층 번 적 생성
     buneEnemies.emplace_back("img/bune.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - FLOOR_SPACING + FLOOR_OFFSET - 70, 2.0f);
@@ -178,9 +175,15 @@ int main() {
     // 4층 패티 적 생성
     pattyEnemies.emplace_back("img/patty.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (4 * FLOOR_SPACING) + FLOOR_OFFSET - 70, 5.0f, 1);
 
-    // 보스 생성 (main 함수 시작부)
-    Boss boss("img/boss.png", "img/bacon.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 150, 10.0f);
+    // 버거킹 보스 생성 
+    Boss boss("img/kingboss.png","bacon.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 150, 10.0f);
 
+    // 좀비보스 
+    Boss zom1("img/zombie.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 180, 5.0f);
+    // 좀비보스 
+    Boss zom2("img/zombie.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (3 * FLOOR_SPACING) + FLOOR_OFFSET - 180, 10.0f);
+    // 좀비보스 
+    Boss zom3("img/zombie.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (4 * FLOOR_SPACING) + FLOOR_OFFSET - 180, 15.0f);
 
 
     // 미사일 
@@ -213,6 +216,7 @@ int main() {
             if (event.type == sf::Event::Closed)
                 window.close();
         }
+
         // 플레이어 이동
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) && player.sprite.getPosition().x > 0)
             player.moveLeft(); // ← 함수 호출로 수정
@@ -223,7 +227,7 @@ int main() {
             player.jump();
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
             player.moveDown();
-
+    
 
         player.applyGravity(); // 중력 적용  
         player.checkCollision(floorPositions);// 충돌 확인
@@ -234,20 +238,17 @@ int main() {
                 player.takeDamage();
             }
         }
-
         for (auto& enemy : cheeseEnemies) {
             if (player.sprite.getGlobalBounds().intersects(enemy.sprite.getGlobalBounds()) || enemy.checkPlayerCollision(player.sprite)) {
                 player.takeDamage();
             }
         }
-
         for (auto& enemy : lettuceEnemies) {
             // 본체와 충돌 확인
             if (player.sprite.getGlobalBounds().intersects(enemy.sprite.getGlobalBounds())) {
                 player.takeDamage();
             }
-
-            // 분리된 잎들과 충돌 확인
+      // 분리된 잎들과 충돌 확인
             for (auto& leaf : enemy.lettuceLeaves) {
                 if (player.sprite.getGlobalBounds().intersects(leaf.sprite.getGlobalBounds())) {
                     player.takeDamage();
@@ -255,7 +256,6 @@ int main() {
                 }
             }
         }
-
         for (auto& enemy : pattyEnemies) {
             if (player.sprite.getGlobalBounds().intersects(enemy.sprite.getGlobalBounds())) {
                 player.takeDamage();
@@ -275,8 +275,6 @@ int main() {
                 missileClock.restart();
             }
         }
-
-
         // 미사일 이동
         for (auto it = missiles.begin(); it != missiles.end();) {
             it->move(); // 각 미사일은 자신의 방향으로 이동
@@ -305,8 +303,6 @@ int main() {
                 }
             }
             // 나머지 적도 같은 방식으로 수정
-
-
             for (auto it = lettuceEnemies.begin(); it != lettuceEnemies.end();) {
                 if (missile.isHitByMissile(it->sprite)) {
                     missile.shape.setPosition(-100, -100);
@@ -339,6 +335,7 @@ int main() {
                     ++it;
                 }
             }
+         
         }
 
         // 적을 ３초마다 생성
@@ -392,21 +389,31 @@ int main() {
             // 각 적 이동
         }
 
-        
-      
+
         if (enemyCnt == 0) {
-            // 적 제거 및 배경 변경
+
+            // 기존 적 제거 및 배경 변경
             buneEnemies.clear();
             cheeseEnemies.clear();
             lettuceEnemies.clear();
             pattyEnemies.clear();
 
-            backgroundSprite.setTexture(backgroundTexture2);  // 배경을 back2로 변경
+            backgroundSprite.setTexture(backgroundTexture2); // 배경을 back2로 변경
 
-            boss.move(100, WINDOW_WIDTH);
-            boss.baconShot();
-           
+            boss.move(0, WINDOW_WIDTH);
+    
+
+            zom1.move(0, WINDOW_WIDTH);
+      
+
+            zom2.move(0, WINDOW_WIDTH);
+          
+            zom3.move(0, WINDOW_WIDTH);
+
+
         }
+
+  
 
         // 화면 갱신
         window.clear();
@@ -416,29 +423,40 @@ int main() {
         enemyCountText.setString("Remaining Enemies: " + std::to_string(enemyCnt));
         window.draw(enemyCountText);
 
-        for (auto& floor : floors)
+        for (auto& floor : floors) {
             window.draw(floor.shape);
-        for (auto& enemy : buneEnemies)
+        }
+        for (auto& enemy : buneEnemies) {
             window.draw(enemy.sprite);
-        for (auto& enemy : cheeseEnemies)
+        }
+        for (auto& enemy : cheeseEnemies) {
             window.draw(enemy.sprite);
+        }
         // 치즈 바닥 렌더링
-        for (auto& enemy : cheeseEnemies)
+        for (auto& enemy : cheeseEnemies) {
             enemy.drawCheeseFloors(window);
-        for (auto& enemy : lettuceEnemies)
+        }
+        for (auto& enemy : lettuceEnemies) {
             enemy.draw(window);
-        for (auto& enemy : pattyEnemies)
+        }
+        for (auto& enemy : pattyEnemies) {
             window.draw(enemy.sprite);
-        for (auto& missile : missiles)
-            window.draw(missile.shape);
-        window.draw(player.sprite);
-
-        // 보스와 베이컨 렌더링
-        if (enemyCnt == 0) {
-            window.draw(boss.sprite); // 보스 그리기
-    
         }
 
+
+        for (auto& missile : missiles) {
+            window.draw(missile.shape);
+        }
+        window.draw(player.sprite);
+
+        // 보스와 좀비 렌더링
+        if (enemyCnt == 0) {
+            window.draw(zom1.sprite); // 좀비 그리기
+            window.draw(zom2.sprite); // 좀비 그리기
+            window.draw(zom3.sprite); // 좀비 그리기
+
+            window.draw(boss.sprite); // 보스 그리기
+        }
 
         window.display();
     }
