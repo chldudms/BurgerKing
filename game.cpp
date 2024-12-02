@@ -208,7 +208,7 @@ int main() {
 
     bool isCleared = false;  // 게임 클리어 상태 변수
     bool isOver = false;
-    int enemyCnt = 1;
+    int enemyCnt = 30;
 
     // 타이머를 위한 변수 선언
     sf::Clock bossclock; // 시간 측정을 위한 시계
@@ -258,6 +258,10 @@ int main() {
             }
             continue; // 게임 로직 건너뜀
         }
+
+        // 게임 다시 시작
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::R))
+            gameStarted = false;
 
         // 플레이어 이동
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) && player.sprite.getPosition().x > 0)
@@ -435,14 +439,23 @@ int main() {
             // 각 적 이동
         }
 
+      
         // 화면 갱신
         window.clear();
-        backgroundSprite.setTexture(backgroundTexture); // 배경 변경
-        window.draw(backgroundSprite);
-
+      
+      
+        if (enemyCnt == 0){
+            backgroundSprite.setTexture(backgroundTexture2); // 배경 변경 
+        }
+        else {
+            backgroundSprite.setTexture(backgroundTexture); // 배경 변경
+        }
+         
+            window.draw(backgroundSprite);
+   
         // 남은 적  텍스트 추가
         enemyCountText.setString("Remaining Enemies: " + std::to_string(enemyCnt));
-        window.draw(enemyCountText); 
+        window.draw(enemyCountText);
 
         for (auto& floor : floors) {
             window.draw(floor.shape);
@@ -478,16 +491,9 @@ int main() {
                 pattyEnemies.clear();
 
              
-                backgroundSprite.setTexture(backgroundTexture2); // 배경 변경
                 bossclock.restart(); // 타이머 시작
                 isBossStageInitialized = true;
-
             }
-
-            // 보스 스테이지 화면 갱신
-         
-       
-
 
             // 1초 후 보스 등장
             if (bossclock.getElapsedTime().asSeconds() >= 1.0f) {
