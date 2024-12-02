@@ -7,7 +7,7 @@
 
 using namespace std;
 
-enum GameState { START_SCREEN, GAME_LOOP };
+
 
 // 화면 크기 정의
 const int WINDOW_WIDTH = 1300;
@@ -208,7 +208,7 @@ int main() {
 
     bool isCleared = false;  // 게임 클리어 상태 변수
     bool isOver = false;
-    int enemyCnt = 30;
+    int enemyCnt = 30;  //남은 적
 
     // 타이머를 위한 변수 선언
     sf::Clock bossclock; // 시간 측정을 위한 시계
@@ -260,8 +260,12 @@ int main() {
         }
 
         // 게임 다시 시작
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::R))
-            gameStarted = false;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
+                 gameStarted = false;
+                 enemyCnt = 30;
+        }
+          
+            
 
         // 플레이어 이동
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) && player.sprite.getPosition().x > 0)

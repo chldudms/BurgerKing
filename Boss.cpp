@@ -22,7 +22,7 @@ public:
 
     // 킹보스 생성자: 체력 10
     Boss(const std::string& bossImg, const std::string& baconImg, float x, float y, float speed)
-        : hp(10), speed(speed) {
+        : hp(1), speed(speed) {
         texture.loadFromFile(bossImg);
         baconShotTexture.loadFromFile(baconImg);
         sprite.setTexture(texture);
@@ -46,7 +46,7 @@ public:
     }
 
     void baconShot() {
-        if (baconClock.getElapsedTime().asSeconds() >=3.0f) {  //3초에 한번
+        if (baconClock.getElapsedTime().asSeconds() >=.0f) {  //3초에 한번
             sf::Vector2f pos = sprite.getPosition();
             sf::Vector2f center = { pos.x + sprite.getGlobalBounds().width / 2,
                                     pos.y + sprite.getGlobalBounds().height / 2 };
