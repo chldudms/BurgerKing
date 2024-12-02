@@ -46,7 +46,7 @@ public:
     }
 
     void baconShot() {
-        if (baconClock.getElapsedTime().asSeconds() >=.0f) {  //3초에 한번
+        if (baconClock.getElapsedTime().asSeconds() >=3.0f) {  //3초에 한번
             sf::Vector2f pos = sprite.getPosition();
             sf::Vector2f center = { pos.x + sprite.getGlobalBounds().width / 2,
                                     pos.y + sprite.getGlobalBounds().height / 2 };
