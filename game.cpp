@@ -17,7 +17,7 @@ const float DOWN_FORCE = 10.0f;
 const float FLOOR_SPACING = 200.0f;  // 층 간 간격을 줄여서 화면에 다 들어오게 조정
 const float FLOOR_THICKNESS = 40.0f;  // 층 두께 설정
 int lastDirection = 1;  // 1: 오른쪽, -1: 왼쪽 (기본값은 오른쪽)   
-int enemyCnt = 0;
+int enemyCnt = 1;
 
 class Player {
 public:
@@ -139,7 +139,7 @@ int main() {
 
     // 배경 텍스처 및 스프라이트
     sf::Texture backgroundTexture, backgroundTexture2, gameOverTexture, gameClearTexture;
-    if (!backgroundTexture.loadFromFile("img/back.jpg") || !backgroundTexture2.loadFromFile("img/back2.jpg")) {
+    if (!backgroundTexture.loadFromFile("img/back.jpg") || !backgroundTexture2.loadFromFile("img/back2.jpg")|| !gameClearTexture.loadFromFile("img/clear.jpg")) {
         std::cerr << "Failed to load background textures!" << std::endl;
         return -1;
     }
@@ -176,14 +176,14 @@ int main() {
     pattyEnemies.emplace_back("img/patty.png", rand() % (WINDOW_WIDTH - 50), WINDOW_HEIGHT - (4 * FLOOR_SPACING) + FLOOR_OFFSET - 70, 5.0f, 1);
 
     // 버거킹 보스 생성 
-    Boss boss("img/kingboss.png","bacon.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 150, 10.0f);
+    Boss boss("img/kingboss.png","img/bacon.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 150, 10.0f);
 
     // 좀비보스 
     Boss zom1("img/zombie.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (2 * FLOOR_SPACING) + FLOOR_OFFSET - 180, 5.0f);
     // 좀비보스 
-    Boss zom2("img/zombie.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (3 * FLOOR_SPACING) + FLOOR_OFFSET - 180, 10.0f);
+    Boss zom2("img/zombie.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (3 * FLOOR_SPACING) + FLOOR_OFFSET - 180, 5.0f);
     // 좀비보스 
-    Boss zom3("img/zombie.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (4 * FLOOR_SPACING) + FLOOR_OFFSET - 180, 15.0f);
+    Boss zom3("img/zombie.png", (WINDOW_WIDTH - 150) / 2, WINDOW_HEIGHT - (4 * FLOOR_SPACING) + FLOOR_OFFSET - 180, 5.0f);
 
 
     // 미사일 
@@ -209,6 +209,7 @@ int main() {
     // 적 추가 타이머 설정
     sf::Clock enemyClock; // 적을 5초마다 생성할 타이머
 
+    bool isCleared = false;  // 게임 클리어 상태 변수
     // 게임 루프
     while (window.isOpen()) {
         sf::Event event;
@@ -227,7 +228,6 @@ int main() {
             player.jump();
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
             player.moveDown();
-    
 
         player.applyGravity(); // 중력 적용  
         player.checkCollision(floorPositions);// 충돌 확인
@@ -390,31 +390,6 @@ int main() {
         }
 
 
-        if (enemyCnt == 0) {
-
-            // 기존 적 제거 및 배경 변경
-            buneEnemies.clear();
-            cheeseEnemies.clear();
-            lettuceEnemies.clear();
-            pattyEnemies.clear();
-
-            backgroundSprite.setTexture(backgroundTexture2); // 배경을 back2로 변경
-
-            boss.move(0, WINDOW_WIDTH);
-    
-
-            zom1.move(0, WINDOW_WIDTH);
-      
-
-            zom2.move(0, WINDOW_WIDTH);
-          
-            zom3.move(0, WINDOW_WIDTH);
-
-
-        }
-
-  
-
         // 화면 갱신
         window.clear();
         window.draw(backgroundSprite);
@@ -451,11 +426,50 @@ int main() {
 
         // 보스와 좀비 렌더링
         if (enemyCnt == 0) {
+            buneEnemies.clear();
+            cheeseEnemies.clear();
+            lettuceEnemies.clear();
+            pattyEnemies.clear();
+
+            backgroundSprite.setTexture(backgroundTexture2);  // 배경을 back2로 변경
+
             window.draw(zom1.sprite); // 좀비 그리기
+            zom1.move(0, WINDOW_WIDTH);
             window.draw(zom2.sprite); // 좀비 그리기
+            zom2.move(0, WINDOW_WIDTH);
             window.draw(zom3.sprite); // 좀비 그리기
+            zom3.move(0, WINDOW_WIDTH);
 
             window.draw(boss.sprite); // 보스 그리기
+            boss.move(0, WINDOW_WIDTH);
+
+            for (auto it = missiles.begin(); it != missiles.end(); ) {
+                if (it->isHitByMissile(boss.sprite)) {
+                    boss.takeDamage(); // 보스 체력 감소
+                    std::cout << "Boss HP: " << boss.hp << std::endl; // 디버깅용 출력
+                    it = missiles.erase(it); // 충돌한 미사일 제거
+                    break; // 한 번만 충돌 처리 후 종료
+                }
+                else {
+                    ++it; // 다음 미사일로 이동
+                }
+            }
+
+            if (boss.hp == 0) {
+                isCleared = true;
+            }
+
+            if (!isCleared) {
+                // 보스 이동 및 공격
+                boss.move(0, WINDOW_WIDTH);
+                boss.baconShot();
+                boss.draw(window);  // 보스 그리기
+            }
+            // 게임 클리어 상태
+            if (isCleared) {
+                backgroundSprite.setTexture(gameClearTexture);
+                window.draw(backgroundSprite);
+            }
         }
 
         window.display();
