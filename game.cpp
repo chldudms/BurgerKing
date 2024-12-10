@@ -207,7 +207,7 @@ int main() {
 
     bool isCleared = false;  // 게임 클리어 상태 변수
     bool isOver = false;
-    int enemyCnt = 1;  //남은 적
+    int enemyCnt = 30;  //남은 적
 
     // 타이머를 위한 변수 선언
     sf::Clock bossclock; // 시간 측정을 위한 시계
@@ -260,10 +260,10 @@ int main() {
 
         // 게임 다시 시작
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
-                 gameStarted = false;
-                 enemyCnt = 1;
-                 isOver = false; 
-                 player.sprite.setPosition(WINDOW_WIDTH / 2-50, WINDOW_HEIGHT - FLOOR_SPACING - 7);  //1층 좌측에 
+                 gameStarted = false; 
+                 enemyCnt = 30;  //적 수 초기화
+                 isOver = false; //게임오버상태 x
+                 player.sprite.setPosition(WINDOW_WIDTH / 2-50, WINDOW_HEIGHT - FLOOR_SPACING - 7);  //1층 좌측에 플레이어 위치 
         }
           
         // 플레이어 이동
